@@ -151,19 +151,36 @@ function use(i){const k=cfg.c.sk[i];if(cds[i]>0)return;cds[i]=SK[k][2];const a=a
  if(k==='nova'){fx(P.x,P.y,140,'#3fd1c4');E.forEach(e=>{if(dist(e,P)<150)e.hp-=40})}
  if(k==='heal'){P.hp=Math.min(P.max,P.hp+30);fx(P.x,P.y,50,'#5fe08a')}
  if(k==='slow'){slowT=3;fx(P.x,P.y,300,'#7ab8ff')}}
-function special(){if(charge<100)return;charge=0;const s=cfg.c.sp;
- if(s==='minigun')mg=6;
- if(s==='storm'){fx(400,250,500,'#e8a23b');E.forEach(e=>e.hp-=110)}
- if(s==='orbital'){fx(P.x,P.y,280,'#ffffff');E.forEach(e=>{if(dist(e,P)<280)e.hp-=140});P.hp=Math.min(P.max,P.hp+25)}}
- if (charge >= 99.9) charge = 100;
-const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+let spT = 0; // Temporizador de bloqueo para cualquier habilidad especial
+function special() {
+    if (charge < 100 || spT > 0) return; // Bloquea si no está al 100% o si ya hay una activa
+    charge = 0;
+    const s = cfg.c.sp;
+    if (s === 'minigun') {
+        mg = 6;
+        spT = 6; // No recarga durante los 6s de minigun
+    }
+    if (s === 'storm') {
+        fx(400, 250, 500, '#e8a23b');
+        E.forEach(e => e.hp -= 110);
+        spT = 1.5; // No recarga durante 1.5s tras lanzar la tormenta
+    }
+    if (s === 'orbital') {
+        fx(P.x, P.y, 280, '#ffffff');
+        E.forEach(e => { if (dist(e, P) < 280) e.hp -= 140; });
+        P.hp = Math.min(P.max, P.hp + 25);
+        spT = 1.5; // No recarga durante 1.5s tras el ataque orbital
+    }
+}
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
 function spawn(){const side=Math.floor(Math.random()*4),r=Math.random();let px,py;
  if(side===0){px=r*VW;py=-20}else if(side===1){px=r*VW;py=VH+20}else if(side===2){px=-20;py=r*VH}else{px=VW+20;py=r*VH}
  const q=Math.random(),ty=T<15?(q<.7?'S':'K'):(q<.4?'S':q<.75?'K':'Y'),k=1+T/90;
  const t={S:{hp:30,sp:1.0,r:15},K:{hp:24,sp:2.0,r:13},Y:{hp:38,sp:1.1,r:14}}[ty];
  E.push({x:px,y:py,ty,hp:t.hp*k,sp:t.sp,r:t.r,cd:0,rot:0,ph:Math.random()*6})}
 function update(dt){
- T+=dt;P.ox=P.x;P.oy=P.y;P.inv=Math.max(0,P.inv-dt);slowT=Math.max(0,slowT-dt);mg=Math.max(0,mg-dt);P.fire-=dt;cds=cds.map(c=>Math.max(0,c-dt));
+ T+=dt;P.ox=P.x;P.oy=P.y;P.inv=Math.max(0,P.inv-dt);slowT=Math.max(0,slowT-dt);mg=Math.max(0,mg-dt);spT=Math.max(0,spT-dt);P.fire-=dt;cds=cds.map(c=>Math.max(0,c-dt));
  let mx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),my=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
  if(P.dash>0){P.dash-=dt;P.x+=P.dx*14*60*dt;P.y+=P.dy*14*60*dt;E.forEach(e=>{if(dist(e,P)<e.r+16)e.hp-=60*dt*4})}
  else if(mx||my){const l=Math.hypot(mx,my);P.x+=mx/l*P.spd*60*dt;P.y+=my/l*P.spd*60*dt}
@@ -171,7 +188,7 @@ function update(dt){
  if(mouse.down&&P.fire<=0){const m=mg>0;shoot(aim(),m?cfg.w.dmg*.8:cfg.w.dmg);P.fire=m?.07:cfg.w.rate}
  spawnT-=dt;if(spawnT<=0&&G.left>0){spawn();G.left--;spawnT=Math.max(.8,2.4-G.w*.25)}
  B.forEach(b=>{b.x+=b.vx*60*dt;b.y+=b.vy*60*dt;b.l-=60*dt});
- E.forEach(e=>{if(e.hp<=0)return;e.px=e.x;e.py=e.y;const tg=(G.ph==='ship'||dist(e,P)<180)?P:SHP,a=Math.atan2(tg.y-e.y,tg.x-e.x),d=dist(e,tg)-(tg===SHP?38:0),sp=e.sp*(slowT>0?.4:1)*60*dt;e.rot=a;e.cd-=dt;e.ph+=dt*6;
+ E=E.filter(e=>{if(e.hp<=0){if(G.ph==='planet'&&!e.got&&G.cap[e.ty]!==undefined){e.st=(e.st===undefined?3.5:e.st)-dt;if(e.st>0)return true}if(e.got)G.cap[e.ty]++;kills++;G.scrap++;if(spT<=0){charge=Math.min(100,charge+8);if(charge>=99.9)charge=100;}fx(e.x,e.y,28,'#d9b45a');return false}return true});
   if(e.ty==='Y'){if(d>230){e.x+=Math.cos(a)*sp;e.y+=Math.sin(a)*sp}else if(d<170){e.x-=Math.cos(a)*sp;e.y-=Math.sin(a)*sp}
    if(e.cd<=0){e.cd=1.7;B.push({x:e.x,y:e.y,vx:Math.cos(a)*4,vy:Math.sin(a)*4,d:9,l:120,own:false})}}
   else if(d>e.r+12){e.x+=Math.cos(a)*sp;e.y+=Math.sin(a)*sp}
