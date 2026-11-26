@@ -151,11 +151,29 @@ function use(i){const k=cfg.c.sk[i];if(cds[i]>0)return;cds[i]=SK[k][2];const a=a
  if(k==='nova'){fx(P.x,P.y,140,'#3fd1c4');E.forEach(e=>{if(dist(e,P)<165)e.hp-=55})}
  if(k==='heal'){P.hp=Math.min(P.max,P.hp+45);fx(P.x,P.y,50,'#5fe08a')}
  if(k==='slow'){slowT=3;fx(P.x,P.y,300,'#7ab8ff')}}
-function special(){if(charge<100)return;charge=0;const s=cfg.c.sp;
- if(s==='minigun')mg=6;
- if(s==='storm'){fx(400,250,500,'#e8a23b');E.forEach(e=>e.hp-=110)}
- if(s==='orbital'){fx(P.x,P.y,280,'#ffffff');E.forEach(e=>{if(dist(e,P)<280)e.hp-=140});P.hp=Math.min(P.max,P.hp+25)}}
-if (charge >= 99.9) charge = 100;
+let spT = 0; // Temporizador de bloqueo para cualquier habilidad especial
+function special() {
+    if (charge < 100 || spT > 0) return; // Bloquea si no está al 100% o si ya hay una activa
+    charge = 0;
+    const s = cfg.c.sp;
+    if (s === 'minigun') {
+        mg = 6;
+        spT = 6; // No recarga durante los 6s de minigun
+    }
+    if (s === 'storm') {
+        fx(400, 250, 500, '#e8a23b');
+        E.forEach(e => e.hp -= 110);
+        spT = 1.5; // No recarga durante 1.5s tras lanzar la tormenta
+    }
+    if (s === 'orbital') {
+        fx(P.x, P.y, 280, '#ffffff');
+        E.forEach(e => { if (dist(e, P) < 280) e.hp -= 140; });
+        P.hp = Math.min(P.max, P.hp + 25);
+        spT = 1.5; // No recarga durante 1.5s tras el ataque orbital
+    }
+}
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function spawn(){const side=Math.floor(Math.random()*4),r=Math.random();let px,py;
  if(side===0){px=r*VW;py=-20}else if(side===1){px=r*VW;py=VH+20}else if(side===2){px=-20;py=r*VH}else{px=VW+20;py=r*VH}
@@ -163,7 +181,8 @@ function spawn(){const side=Math.floor(Math.random()*4),r=Math.random();let px,p
  const t={S:{hp:30,sp:1.0,r:15},K:{hp:24,sp:2.0,r:13},Y:{hp:38,sp:1.1,r:14}}[ty];
  E.push({x:px,y:py,ty,hp:t.hp*k,sp:t.sp,r:t.r,cd:0,rot:0,ph:Math.random()*6})}
 function update(dt){
- T+=dt;P.ox=P.x;P.oy=P.y;P.inv=Math.max(0,P.inv-dt);slowT=Math.max(0,slowT-dt);mg=Math.max(0,mg-dt);P.fire-=dt;cds=cds.map(c=>Math.max(0,c-dt));
+ T+=dt;P.ox=P.x;P.oy=P.y;P.inv=Math.max(0,P.inv-dt);slowT=Math.max(0,slowT-dt);mg=Math.max(0,mg-dt);spT=Math.max(0,spT-dt);P.fire-=dt;cds=cds.map(c=>Math.max(0,c-dt));
+ 
  let mx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),my=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
  if(P.dash>0){P.dash-=dt;P.x+=P.dx*14*60*dt;P.y+=P.dy*14*60*dt;E.forEach(e=>{if(dist(e,P)<e.r+16)e.hp-=60*dt*4})}
  else if(mx||my){const l=Math.hypot(mx,my);P.x+=mx/l*P.spd*60*dt;P.y+=my/l*P.spd*60*dt}
@@ -180,7 +199,8 @@ function update(dt){
  if(G.ph==='ship')E.forEach(e=>{if(e.hp>0&&!walk(e.x,e.y)){if(walk(e.x,e.py))e.y=e.py;else if(walk(e.px,e.y))e.x=e.px;else{e.x=e.px;e.y=e.py}}});B.forEach(b=>{if(!b.own&&G.ph==='planet'&&Math.hypot(b.x-400,b.y-250)<40){G.hull-=b.d*.5;b.l=0}});B.forEach(b=>{if(b.own){for(const e of E){if(e.hp>0&&Math.hypot(b.x-e.x,b.y-e.y)<e.r+4){e.hp-=b.d;b.l=0;break}}}
   else if(Math.hypot(b.x-P.x,b.y-P.y)<14&&P.inv<=0){hurt(b.d);b.l=0}});
  B=B.filter(b=>b.l>0&&b.x>-20&&b.x<VW+20&&b.y>-20&&b.y<VH+20);
- E=E.filter(e=>{if(e.hp<=0){if(G.ph==='planet'&&!e.got&&G.cap[e.ty]!==undefined){e.st=(e.st===undefined?3.5:e.st)-dt;if(e.st>0)return true}if(e.got)G.cap[e.ty]++;kills++;G.scrap++;charge=Math.min(100,charge+8);fx(e.x,e.y,28,'#d9b45a');return false}return true});
+  E=E.filter(e=>{if(e.hp<=0){if(G.ph==='planet'&&!e.got&&G.cap[e.ty]!==undefined){e.st=(e.st===undefined?3.5:e.st)-dt;if(e.st>0)return true}if(e.got)G.cap[e.ty]++;kills++;G.scrap++;if(spT<=0){charge=Math.min(100,charge+8);if(charge>=99.9)charge=100;}fx(e.x,e.y,28,'#d9b45a');return false}return true});
+                            
  (G.ph==='planet'?G.bases:[]).forEach(b=>{b.cd-=dt;if(b.cd<=0){let n=null,m=230;E.forEach(e=>{const d=dist(e,b);if(d<m){m=d;n=e}});if(n){const a=Math.atan2(n.y-b.y,n.x-b.x);B.push({x:b.x,y:b.y,vx:Math.cos(a)*9,vy:Math.sin(a)*9,d:8,l:50,own:true});b.cd=.7}}});F.forEach(f=>{f.r+=f.m*dt/.35;f.t-=dt});F=F.filter(f=>f.t>0);
  if(P.hp<=0||G.hull<=0)finish(false);else waveCheck()}
 function hurt(v){P.hp-=v}
