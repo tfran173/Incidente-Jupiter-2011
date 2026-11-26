@@ -155,6 +155,7 @@ function special(){if(charge<100)return;charge=0;const s=cfg.c.sp;
  if(s==='minigun')mg=6;
  if(s==='storm'){fx(400,250,500,'#e8a23b');E.forEach(e=>e.hp-=110)}
  if(s==='orbital'){fx(P.x,P.y,280,'#ffffff');E.forEach(e=>{if(dist(e,P)<280)e.hp-=140});P.hp=Math.min(P.max,P.hp+25)}}
+ if (charge >= 99.9) charge = 100;
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function spawn(){const side=Math.floor(Math.random()*4),r=Math.random();let px,py;
  if(side===0){px=r*VW;py=-20}else if(side===1){px=r*VW;py=VH+20}else if(side===2){px=-20;py=r*VH}else{px=VW+20;py=r*VH}
