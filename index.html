@@ -71,11 +71,11 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SK={fan:['Abanico','Tres disparos en abanico',4],shield:['Escudo','Invulnerable 2 s',9],dash:['Impulso','Embestida que daña',5],nova:['Pulso','Onda de choque cercana',8],heal:['Kit médico','Recupera 30 de vida',14],slow:['Campo cryo','Ralentiza a las Keys 3 s',10]};
 const SPS={minigun:['Minigun','Fuego continuo durante 6 s'],storm:['Tormenta joviana','Daño enorme a todas las Keys'],orbital:['Pulso orbital','Gran explosión y curación']};
 const CH=[
- {id:'tanque',n:'Tanque',role:'Pesado de vanguardia',hp:130,spd:2.4,sk:['fan','shield','nova'],sp:'minigun',skin:'#b98262',hair:'bald'},
- {id:'rizos',n:'Rizos',role:'Explorador ágil',hp:90,spd:3.2,sk:['dash','fan','heal'],sp:'storm',skin:'#7a4d33',hair:'curly'},
- {id:'barba',n:'Barbarroja',role:'Ingeniero de campo',hp:110,spd:2.8,sk:['nova','slow','shield'],sp:'orbital',skin:'#e6b58f',hair:'red'},
- {id:'lentes',n:'Lentes',role:'Científico de campo',hp:80,spd:3.0,sk:['slow','dash','heal'],sp:'storm',skin:'#f0cba9',hair:'long'},
- {id:'algo',n:'Owen O. Algo',role:'Quinto tripulante (fugitivo)',hp:70,spd:3.6,sk:['dash','slow','fan'],sp:'orbital',skin:'#d3a27a',hair:'short'}];
+ {id:'tanque',n:'Joe',role:'Ingeniero Tecnico',hp:130,spd:2.4,sk:['fan','shield','nova'],sp:'minigun',skin:'#b98262',hair:'bald'},
+ {id:'rizos',n:'Darren Watkins Jr',role:'Medico Veloz',hp:90,spd:3.2,sk:['dash','fan','heal'],sp:'storm',skin:'#7a4d33',hair:'curly'},
+ {id:'barba',n:'Case',role:'Tanque de Vanguardia',hp:110,spd:2.8,sk:['nova','slow','shield'],sp:'orbital',skin:'#e6b58f',hair:'red'},
+ {id:'lentes',n:'Forrest Waldron',role:'Científico de campo',hp:80,spd:3.0,sk:['slow','dash','heal'],sp:'storm',skin:'#f0cba9',hair:'long'},
+ {id:'algo',n:'Owen O. Algo',role:'Militar principiante',hp:70,spd:3.6,sk:['dash','slow','fan'],sp:'orbital',skin:'#d3a27a',hair:'short'}];
 const W=[
  {id:'pistola',n:'Pistola reglamentaria',cost:0,dmg:10,rate:.35,pro:'Fiable y precisa',con:'Poco daño'},
  {id:'rifle',n:'Rifle de pulsos',cost:150,dmg:14,rate:.2,pro:'Cadencia alta',con:'Daño moderado'},
@@ -155,6 +155,7 @@ function special(){if(charge<100)return;charge=0;const s=cfg.c.sp;
  if(s==='minigun')mg=6;
  if(s==='storm'){fx(400,250,500,'#e8a23b');E.forEach(e=>e.hp-=110)}
  if(s==='orbital'){fx(P.x,P.y,280,'#ffffff');E.forEach(e=>{if(dist(e,P)<280)e.hp-=140});P.hp=Math.min(P.max,P.hp+25)}}
+if (charge >= 99.9) charge = 100;
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function spawn(){const side=Math.floor(Math.random()*4),r=Math.random();let px,py;
  if(side===0){px=r*VW;py=-20}else if(side===1){px=r*VW;py=VH+20}else if(side===2){px=-20;py=r*VH}else{px=VW+20;py=r*VH}
